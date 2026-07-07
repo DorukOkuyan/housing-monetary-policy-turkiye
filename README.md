@@ -28,6 +28,15 @@ Main script:
 
 - `code/local_projections.do`
 
+The code should be run from the root folder of the repository.
+
+Required Stata packages:
+
+- `estout`
+- `xtscc`
+- `reghdfe`
+- `ftools`
+
 ## Repository structure
 
 ```text
