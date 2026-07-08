@@ -87,7 +87,6 @@ housing-monetary-policy-turkiye/
 │
 └── output/
     ├── figures/
-    │   ├── *.pdf
-    │   └── *.csv
+    │   └── *.pdf
     └── tables/
         └── *.tex
