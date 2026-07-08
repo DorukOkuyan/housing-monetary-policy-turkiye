@@ -1,6 +1,6 @@
 *===============================================================================
 * Replication code for:
-* Household Leverage and Monetary Transmission in High-Inflation Housing Markets
+* State-Dependent Monetary Transmission to Housing Markets: Evidence from Türkiye
 *
 * Author: Doruk Okuyan
 *
