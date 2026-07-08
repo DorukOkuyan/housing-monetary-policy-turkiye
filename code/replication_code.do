@@ -1,6 +1,6 @@
 *===============================================================================
 * Replication code for:
-* Household Leverage and Housing Markets in a High-Inflation Economy
+* Household Leverage and Monetary Transmission in High-Inflation Housing Markets
 *
 * Author: Doruk Okuyan
 *
@@ -25,11 +25,11 @@ if _rc ssc install estout, replace
 cap which xtscc
 if _rc ssc install xtscc, replace
 
-cap which reghdfe
-if _rc ssc install reghdfe, replace
-
 cap which ftools
 if _rc ssc install ftools, replace
+
+cap which reghdfe
+if _rc ssc install reghdfe, replace
 
 *===============================================================================
 * SETTINGS
@@ -37,7 +37,7 @@ if _rc ssc install ftools, replace
 
 global root "`c(pwd)'"
 
-local datapath "$root/data/data.xlsx"
+local datapath "$root/data/paper_data.xlsx"
 local sheetname "Prepared Data for Regression"
 
 local graphpath "$root/output/figures"
