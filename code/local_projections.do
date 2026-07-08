@@ -1,23 +1,60 @@
-* Clear everything from memory
+*===============================================================================
+* Replication code for:
+* Household Leverage and Housing Markets in a High-Inflation Economy
+*
+* Author: Doruk Okuyan
+*
+* Note:
+* This do-file should be run from the root folder of the GitHub repository:
+* housing-monetary-policy-turkiye/
+*
+* Bloomberg analyst forecast data are proprietary and are not included in this
+* replication package.
+*===============================================================================
+
 clear all
 set more off
+
+*===============================================================================
+* REQUIRED PACKAGES
+*===============================================================================
+
+cap which esttab
+if _rc ssc install estout, replace
+
+cap which xtscc
+if _rc ssc install xtscc, replace
+
+cap which reghdfe
+if _rc ssc install reghdfe, replace
+
+cap which ftools
+if _rc ssc install ftools, replace
 
 *===============================================================================
 * SETTINGS
 *===============================================================================
 
-local datapath "/Users/Dell2/Desktop/Dersler/LSE Dersler/EC424 - Monetary Econ/Thesis/Data/Thesis Data.xlsx"
+global root "`c(pwd)'"
+
+local datapath "$root/data/data.xlsx"
 local sheetname "Prepared Data for Regression"
-local graphpath "/Users/Dell2/Desktop/Dersler/LSE Dersler/EC424 - Monetary Econ/Thesis/Graphs"
+
+local graphpath "$root/output/figures"
+local tablepath "$root/output/tables"
+
+cap mkdir "$root/output"
+cap mkdir "`graphpath'"
+cap mkdir "`tablepath'"
 
 local H = 24 
 local P_hp = 12
 local P_exp = 1
 local P_rent = 6
-local P_hpexp = 1
-local P_sales = 1
+
 local shock "residuals_mps"
 local controls "L.unemp_sa L.bist_mth_gwt_rate L.usdtry_mth_gwt_rate L.pol_rate L.gold_mth_gwt_rate"
+
 local crit90 = 1.645
 local crit68 = 1.0
 local crit = `crit90'
@@ -32,23 +69,23 @@ graph set window fontface "Times New Roman"
 import excel "`datapath'", sheet("`sheetname'") firstrow clear
 
 keep if date >= td(01jan2015)
-*keep if date <= td(01aug2021)
-
-gen mp_surp_exp = pol_rate - pol_rate_exp
 
 * regressşion for Bloomberg forecasts shock orthogonalization
+
+* Note:
+* Bloomberg analyst forecast data are proprietary and are not included in this
+* replication package. The variable mp_surp is the monetary policy surprise
+* constructed from Bloomberg analyst forecast errors. Users with Bloomberg access
+* should construct/provide this variable before running the orthogonalization step.
+
 eststo clear
 eststo bloomberg: reg mp_surp cpi_sa_fd cpi_exp_12mth_fd cpi_exp_24mth_fd ///
     gdp_gwt_exp_12mth_fd ipi_sa_gwt_fd cap_utl_sa_fd unemp_sa_fd ///
     usd_exp_12mth_pct_chg exc_rate_pct_chg stck_prc_pct_chg 
 predict residuals_mps, residuals
 
-*eststo survey: reg mp_surp_exp cpi_sa_fd cpi_exp_12mth_fd cpi_exp_24mth_fd ///
-    gdp_gwt_exp_12mth_fd ipi_sa_gwt_fd cap_utl_sa_fd unemp_sa_fd ///
-    usd_exp_12mth_pct_chg exc_rate_pct_chg stck_prc_pct_chg
-*predict residuals_mps_exp, residuals
 
-esttab bloomberg using "`graphpath'/orthogonalization_table.tex", replace ///
+esttab bloomberg using "`tablepath'/orthogonalization_table.tex", replace ///
     b(3) se(3) star(* 0.10 ** 0.05 *** 0.01) ///
     nomtitles label booktabs ///
     collabels(none) ///
@@ -245,7 +282,7 @@ twoway (line rrent_growth12 ym if ym >= tm(2019m1), ///
 graph export "`graphpath'/ts_rrent_growth.pdf", replace
 
 
-gen prob_buying_pct = prob_buying_house_in1year * 100
+gen prob_buying_pct = prob_buying_house_in1year_sa * 100
 
 twoway (line prob_buying_pct ym if ym >= tm(2015m1), ///
            lcolor("24 105 109") lwidth(medthick)) ///
@@ -266,7 +303,6 @@ gen real_house = house_p_index / cpi
 gen real_rent = new_tenant_rent_index / cpi
 gen ln_hpi = ln(real_house)
 gen ln_rent = ln(real_rent)
-gen ln_sales = ln(total_house_sales)
 
 gen L_hh_lev = L.detrended_leverage_hamilton
 sum L_hh_lev
@@ -278,16 +314,10 @@ forvalues h = 0/`H' {
     gen dy_hp`h' = F`h'.ln_hpi - L.ln_hpi
 }
 forvalues h = 0/`H' {
-    gen dy_exp`h' = F`h'.prob_buying_house_in1year - L.prob_buying_house_in1year
+    gen dy_exp`h' = F`h'.prob_buying_house_in1year_sa - L.prob_buying_house_in1year_sa
 }
 forvalues h = 0/`H' {
     gen dy_rent`h' = F`h'.ln_rent - L.ln_rent
-}
-forvalues h = 0/`H' {
-    gen dy_hpexp`h' = F`h'.housing_sales_price_exp3m_sa - L.housing_sales_price_exp3m_sa
-}
-forvalues h = 0/`H' {
-    gen dy_sales`h' = F`h'.ln_sales - L.ln_sales
 }
 
 forvalues p = 1/`P_hp' {
@@ -296,19 +326,11 @@ forvalues p = 1/`P_hp' {
 }
 forvalues p = 1/`P_exp' {
     local pp = `p' + 1
-    gen dly_exp`p' = L`p'.prob_buying_house_in1year - L`pp'.prob_buying_house_in1year
+    gen dly_exp`p' = L`p'.prob_buying_house_in1year_sa - L`pp'.prob_buying_house_in1year_sa
 }
 forvalues p = 1/`P_rent' {
     local pp = `p' + 1
     gen dly_rent`p' = L`p'.ln_rent - L`pp'.ln_rent
-}
-forvalues p = 1/`P_hpexp' {
-    local pp = `p' + 1
-    gen dly_hpexp`p' = L`p'.housing_sales_price_exp3m_sa - L`pp'.housing_sales_price_exp3m_sa
-}
-forvalues p = 1/`P_sales' {
-    local pp = `p' + 1
-    gen dly_sales`p' = L`p'.ln_sales - L`pp'.ln_sales
 }
 
 local lagvars_hp ""
@@ -322,14 +344,6 @@ forvalues p = 1/`P_exp' {
 local lagvars_rent ""
 forvalues p = 1/`P_rent' {
     local lagvars_rent "`lagvars_rent' dly_rent`p'"
-}
-local lagvars_hpexp ""
-forvalues p = 1/`P_hpexp' {
-    local lagvars_hpexp "`lagvars_hpexp' dly_hpexp`p'"
-}
-local lagvars_sales ""
-forvalues p = 1/`P_sales' {
-    local lagvars_sales "`lagvars_sales' dly_sales`p'"
 }
 
 *===============================================================================
@@ -758,46 +772,6 @@ rename TRA_housing_debt_ratio  debt_17
 rename TRB_housing_debt_ratio  debt_18
 rename TRC_housing_debt_ratio  debt_19
 
-rename TR10_real_credit_pc credit_1
-rename TR21_real_credit_pc credit_2
-rename TR22_real_credit_pc credit_3
-rename TR31_real_credit_pc credit_4
-rename TR32_real_credit_pc credit_5
-rename TR33_real_credit_pc credit_6
-rename TR41_real_credit_pc credit_7
-rename TR42_real_credit_pc credit_8
-rename TR51_real_credit_pc credit_9
-rename TR52_real_credit_pc credit_10
-rename TR61_real_credit_pc credit_11
-rename TR62_real_credit_pc credit_12
-rename TR63_real_credit_pc credit_13
-rename TR7_real_credit_pc  credit_14
-rename TR8_real_credit_pc  credit_15
-rename TR9_real_credit_pc  credit_16
-rename TRA_real_credit_pc  credit_17
-rename TRB_real_credit_pc  credit_18
-rename TRC_real_credit_pc  credit_19
-
-rename TR10_house_sales sales_1
-rename TR21_house_sales sales_2
-rename TR22_house_sales sales_3
-rename TR31_house_sales sales_4
-rename TR32_house_sales sales_5
-rename TR33_house_sales sales_6
-rename TR41_house_sales sales_7
-rename TR42_house_sales sales_8
-rename TR51_house_sales sales_9
-rename TR52_house_sales sales_10
-rename TR61_house_sales sales_11
-rename TR62_house_sales sales_12
-rename TR63_house_sales sales_13
-rename TR7_house_sales  sales_14
-rename TR8_house_sales  sales_15
-rename TR9_house_sales  sales_16
-rename TRA_house_sales  sales_17
-rename TRB_house_sales  sales_18
-rename TRC_house_sales  sales_19
-
 rename tr10_rent    rent_1
 rename tr21_rent    rent_2
 rename tr22_rent    rent_3
@@ -819,15 +793,13 @@ rename trb_rent     rent_18
 rename trc_rent     rent_19
 
 keep ym date residuals_mps ///
-     hp_1-hp_19 debt_1-debt_19 credit_1-credit_19 sales_1-sales_19 rent_1-rent_19 ///
-     unemp_sa usdtry_mth_gwt_rate bist_mth_gwt_rate pol_rate cpi ///
+     hp_1-hp_19 debt_1-debt_19 rent_1-rent_19 ///
+     unemp_sa usdtry_mth_gwt_rate bist_mth_gwt_rate pol_rate cpi gold_mth_gwt_rate ///
      house_p_index
 
-reshape long hp_ debt_ credit_ sales_ rent_, i(ym) j(region_id)
+reshape long hp_ debt_ rent_, i(ym) j(region_id)
 rename hp_ housing_price
 rename debt_ housing_debt_ratio
-rename credit_ real_credit_pc
-rename sales_ house_sales
 rename rent_ rent_index
 
 
@@ -843,7 +815,6 @@ xtset region_id ym
 
 gen real_housing = housing_price / cpi
 gen ln_hp = ln(real_housing)
-gen ln_sales_reg = ln(house_sales)
 gen real_rent_reg = rent_index / cpi
 gen ln_rent_reg = ln(real_rent_reg)
 
@@ -854,9 +825,7 @@ gen ln_rent_reg = ln(real_rent_reg)
 *===============================================================================
 
 preserve
-
-
-import excel "/Users/Dell2/Desktop/Dersler/LSE Dersler/EC424 - Monetary Econ/Thesis/Data/regional_housing_debt_ratio_quarterly.xlsx", firstrow clear
+import excel "$root/data/regional_housing_debt_ratio_quarterly.xlsx", firstrow clear
 
 * Build Stata quarterly date
 gen q = yq(year, quarter)
@@ -1018,9 +987,6 @@ graph export "`graphpath'/ts_regional_housing_debt_detrended.pdf", replace
 
 forvalues h = 0/`H' {
     gen dy`h' = F`h'.ln_hp - L.ln_hp
-}
-forvalues h = 0/`H' {
-    gen dy_rsales`h' = F`h'.ln_sales_reg - L.ln_sales_reg
 }
 forvalues h = 0/`H' {
     gen dy_rrent`h' = F`h'.ln_rent_reg - L.ln_rent_reg
