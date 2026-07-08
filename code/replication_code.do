@@ -85,7 +85,7 @@ eststo bloomberg: reg mp_surp cpi_sa_fd cpi_exp_12mth_fd cpi_exp_24mth_fd ///
 predict residuals_mps, residuals
 
 
-esttab bloomberg using "`tablepath'/orthogonalization_table.tex", replace ///
+esttab bloomberg using "`tablepath'/Appendix_Table.tex", replace ///
     b(3) se(3) star(* 0.10 ** 0.05 *** 0.01) ///
     nomtitles label booktabs ///
     collabels(none) ///
