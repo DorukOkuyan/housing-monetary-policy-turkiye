@@ -1,8 +1,8 @@
-# Monetary Tightening, Household Leverage, and Housing Markets in a High-Inflation Economy
+# Household Leverage and Monetary Transmission in High-Inflation Housing Markets
 
 This repository contains replication code and non-proprietary processed data for the paper:
 
-**Monetary Tightening, Household Leverage, and Housing Markets in a High-Inflation Economy**
+**Household Leverage and Monetary Transmission in High-Inflation Housing Markets**
 
 ## Author
 
@@ -18,7 +18,9 @@ The public datasets used in the paper are obtained from:
 - Turkish Statistical Institute
 - Banking Regulation and Supervision Agency
 
-Bloomberg analyst forecast data are proprietary and are not included in this repository. Users with access to Bloomberg analyst forecast data should place the relevant proprietary file in a local `data_private/` folder. This folder is excluded from the repository.
+Bloomberg analyst forecast data are proprietary and are not included in this repository. Therefore, the monetary policy surprise variable, `mp_surp`, is also not included.
+
+To fully replicate the results, users with access to Bloomberg should obtain the median analyst forecast of the policy rate before each Monetary Policy Committee meeting and construct the relevant variable.
 
 ## Variable dictionary
 
@@ -57,7 +59,7 @@ The Stata code is stored in the `code/` folder.
 
 Main script:
 
-- `code/local_projections.do`
+- `code/replication_code.do`
 
 The code should be run from the root folder of the repository.
 
@@ -68,11 +70,24 @@ Required Stata packages:
 - `reghdfe`
 - `ftools`
 
+Note: The Stata code requires `mp_surp` to exist in `data/paper_data.xlsx`. Since Bloomberg forecasts are proprietary, users must construct this variable separately before running the replication code.
+
 ## Repository structure
 
 ```text
-data/
-    data.xlsx
-
-code/
-    local_projections.do
+housing-monetary-policy-turkiye/
+├── README.md
+│
+├── code/
+│   └── replication_code.do
+│
+├── data/
+│   ├── paper_data.xlsx
+│   └── regional_housing_debt_ratio_quarterly.xlsx
+│
+└── output/
+    ├── figures/
+    │   ├── *.pdf
+    │   └── *.csv
+    └── tables/
+        └── *.tex ```
