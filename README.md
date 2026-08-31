@@ -1,8 +1,8 @@
-# State-Dependent Monetary Transmission to Housing Markets: Evidence from Türkiye
+# Household Leverage and State-Dependent Housing-Market Transmission in a High-Inflation Economy
 
 This repository contains replication code and non-proprietary processed data for the paper:
 
-**State-Dependent Monetary Transmission to Housing Markets: Evidence from Türkiye**
+**Household Leverage and State-Dependent Housing-Market Transmission in a High-Inflation Economy**
 
 ## Author
 
